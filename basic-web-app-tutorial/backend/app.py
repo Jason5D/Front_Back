@@ -54,29 +54,27 @@ def users():
             return flask.jsonify({"status": "error", "message": str(e)}), 500
 
     if request.method == "DELETE":
-        user_id_to_delete = request.args.get("user_id")
-        if user_id_to_delete:
-            # Filter out the user with the specified ID from user_data
-            user_data = [
-                user for user in user_data if user.get("user_id") != user_id_to_delete
-            ]
+        identifier = request.args.get("identifier")  # Use "identifier" instead of "user_id"
+        if identifier:
+            user_to_delete = None
+            for user in user_data:
+                if user.get("user_id") == identifier or user.get("username") == identifier:
+                    user_to_delete = user
+                    break
 
-            # Write the updated user_data list to the JSON file
-            with open("users.json", "w") as f:
-                json.dump(user_data, f, indent=4)
+            if user_to_delete:
+                user_data.remove(user_to_delete)
 
-            return flask.jsonify(
-                {
-                    "status": "success",
-                    "message": f"Deleted user with ID: {user_id_to_delete}",
-                }
-            )
+                # Write the updated user_data list to the JSON file
+                with open("users.json", "w") as f:
+                    json.dump(user_data, f, indent=4)
+
+                return flask.jsonify({"status": "success", "message": f"Deleted user with Identifier: {identifier}"})
+            else:
+                return flask.jsonify({"status": "error", "message": f"User not found with Identifier: {identifier}"}), 404
 
         else:
-            return (
-                flask.jsonify({"status": "error", "message": "User ID not provided"}),
-                400,
-            )
+            return flask.jsonify({"status": "error", "message": "Identifier not provided"}), 400
 
 if __name__ == "__main__":
     # Load existing user data from the JSON file at startup

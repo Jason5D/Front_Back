@@ -143,7 +143,7 @@ function deleteUserData(deleteUserInput) {
         }
     };
     // Send a DELETE request to the backend, including the user ID or Username to delete
-    deleteDataXhr.open("DELETE", "http://localhost:6969/users?user_id=" + deleteUserInput, true);
+    deleteDataXhr.open("DELETE", "http://localhost:6969/users?identifier=" + deleteUserInput, true); // Use "identifier" instead of "user_id"
     // Send the request over the network
     deleteDataXhr.send();
 }
