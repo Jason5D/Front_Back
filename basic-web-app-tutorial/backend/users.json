@@ -1,5 +1,29 @@
 [
-  { "username": "user1", "pets": ["dog"] },
-  { "username": "user2", "pets": [] },
-  { "username": "user3", "pets": ["duck", "duck", "goose"] }
+    {
+        "username": "user1",
+        "pets": [
+            "dog"
+        ]
+    },
+    {
+        "username": "user2",
+        "pets": []
+    },
+    {
+        "username": "user3",
+        "pets": [
+            "duck",
+            "duck",
+            "goose"
+        ]
+    },
+    {
+        "data": "new data"
+    },
+    {
+        "data": "more data"
+    },
+    {
+        "data": "user5"
+    }
 ]
