@@ -1,94 +1,160 @@
 <!DOCTYPE html>
 <html>
-  <head>
+<head>
     <title>Test page</title>
-  </head>
-  <body>
-    <div>This is a simple test to get data from a backend</div>
-    <div><span>Last update: </span><span id="time-container"></span></div>
-    <div>
-      <label for="data-input">Data to send:</label>
-      <input type="text" id="data-input" />
-      <button onclick="sendData()">Send data</button>
-    </div>
-    <div>
-      <div id="sent-data-container"></div>
-    </div>
-    <hr />
-    <div>
-      <button onclick="getUsers()">Get user data</button>
-      <div id="result-container"></div>
-    </div>
-  </body>
-  <script>
-    var xhr = null;
-    var dataDiv;
-    var dataToSend;
+</head>
+<body>
+<div>This is a simple test to get data from a backend</div>
+<div><span>Last update: </span><span id="time-container"></span></div>
+<div>
+    <form onsubmit="submitForm(event)">
+        <label for="user-id-input">User ID:</label>
+        <input type="text" id="user-id-input" required />
+        <br />
 
-    getXmlHttpRequestObject = function () {
-      if (!xhr) {
+        <label for="username-input">Username:</label>
+        <input type="text" id="username-input" required />
+        <br />
+
+        <label for="pets-input">Pets (comma-separated):</label>
+        <input type="text" id="pets-input" required />
+        <br />
+
+        <button type="submit">Add User</button>
+    </form>
+</div>
+<hr />
+<div>
+    <form onsubmit="deleteUser(event)">
+        <label for="delete-user-input">Delete User (User ID or Username):</label>
+        <input type="text" id="delete-user-input" required />
+        <br />
+        <button type="submit">Delete User</button>
+    </form>
+    <button onclick="getUsers()">Get user data</button>
+    <div id="result-container"></div>
+</div>
+</body>
+<script>
+var xhr = null;
+var dataDiv;
+var dataToSend;
+
+getXmlHttpRequestObject = function () {
+    if (!xhr) {
         // Create a new XMLHttpRequest object
         xhr = new XMLHttpRequest();
-      }
-      return xhr;
-    };
+    }
+    return xhr;
+};
 
-    function dataCallback() {
-      // Check response is ready or not
-      if (xhr.readyState == 4 && xhr.status == 200) {
+function dataCallback() {
+    // Check response is ready or not
+    if (xhr.readyState == 4 && xhr.status == 200) {
         console.log("User data received!");
         getDate();
         dataDiv = document.getElementById("result-container");
         // Set current data text
         dataDiv.innerHTML = xhr.responseText;
-      }
     }
+}
 
-    function sendDataCallback() {
-      // Check response is ready or not
-      if (xhr.readyState == 4 && xhr.status == 201) {
-        console.log("Data creation response received!");
-        getDate();
-        dataDiv = document.getElementById("sent-data-container");
-        // Set current data text
-        dataDiv.innerHTML = xhr.responseText;
-      }
-    }
+function getUsers() {
+    console.log("Get users...");
+    xhr = getXmlHttpRequestObject();
+    xhr.onreadystatechange = dataCallback;
+    // asynchronous requests
+    xhr.open("GET", "http://localhost:6969/users", true);
+    // Send the request over the network
+    xhr.send(null);
+}
 
-    function getUsers() {
-      console.log("Get users...");
-      xhr = getXmlHttpRequestObject();
-      xhr.onreadystatechange = dataCallback;
-      // asynchronous requests
-      xhr.open("GET", "http://localhost:6969/users", true);
-      // Send the request over the network
-      xhr.send(null);
-    }
+function submitForm(event) {
+    event.preventDefault(); // Prevent the default form submission behavior
 
-    function sendData() {
-      var sendDataXhr = getXmlHttpRequestObject(); // Use a different variable
-      dataToSend = document.getElementById("data-input").value;
-      if (!dataToSend) {
-        console.log("Data is empty.");
-        return;
-      }
-      console.log("Sending data: " + dataToSend);
-      sendDataXhr.onreadystatechange = sendDataCallback; // Use the new variable
-      // asynchronous requests
-      sendDataXhr.open("POST", "http://localhost:6969/users", true);
-      sendDataXhr.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
-      // Send the request over the network
-      sendDataXhr.send(JSON.stringify({ data: dataToSend }));
-    }
+    // Collect data from form fields
+    var userId = document.getElementById("user-id-input").value;
+    var username = document.getElementById("username-input").value;
+    var pets = document.getElementById("pets-input").value.split(",");
 
-    function getDate() {
-      date = new Date().toString();
-      document.getElementById("time-container").textContent = date;
-    }
+    // Create a data object
+    var data = {
+        user_id: userId,
+        username: username,
+        pets: pets,
+    };
 
-    (function () {
-      getDate();
-    })();
-  </script>
+    // Send the data to the backend using a POST request
+    sendData(data);
+}
+
+function sendData(data) {
+    var sendDataXhr = getXmlHttpRequestObject(); // Use a different variable
+    console.log("Sending data: " + JSON.stringify(data));
+    sendDataXhr.onreadystatechange = function () {
+        // Check response is ready or not
+        if (sendDataXhr.readyState == 4) {
+            if (sendDataXhr.status == 201) {
+                console.log("Data creation response received!");
+                getDate();
+                dataDiv = document.getElementById("result-container");
+                // Set current data text
+                dataDiv.innerHTML = sendDataXhr.responseText;
+            } else {
+                console.error("Error adding user data.");
+            }
+        }
+    };
+    // asynchronous requests
+    sendDataXhr.open("POST", "http://localhost:6969/users", true);
+    sendDataXhr.setRequestHeader(
+        "Content-Type",
+        "application/json;charset=UTF-8"
+    );
+    // Send the request over the network
+    sendDataXhr.send(JSON.stringify(data));
+}
+
+function deleteUser(event) {
+    event.preventDefault(); // Prevent the default form submission behavior
+
+    // Collect the user ID or Username to delete from the form field
+    var deleteUserInput = document.getElementById("delete-user-input").value;
+
+    // Send the user ID or Username to the backend for deletion
+    deleteUserData(deleteUserInput);
+}
+
+function deleteUserData(deleteUserInput) {
+    var deleteDataXhr = getXmlHttpRequestObject(); // Use a different variable
+    console.log("Deleting user data: " + deleteUserInput);
+    deleteDataXhr.onreadystatechange = function () {
+        // Check response is ready or not
+        if (deleteDataXhr.readyState == 4) {
+            if (deleteDataXhr.status == 200) {
+                console.log("User data deleted successfully!");
+                getDate();
+                dataDiv = document.getElementById("result-container");
+                // Set current data text
+                dataDiv.innerHTML = deleteDataXhr.responseText;
+            } else {
+                console.error("Error deleting user data.");
+            }
+        }
+    };
+    // Send a DELETE request to the backend, including the user ID or Username to delete
+    deleteDataXhr.open("DELETE", "http://localhost:6969/users?user_id=" + deleteUserInput, true);
+    // Send the request over the network
+    deleteDataXhr.send();
+}
+
+function getDate() {
+    date = new Date().toString();
+    document.getElementById("time-container").textContent = date;
+}
+
+(function () {
+    getDate();
+})();
+</script>
 </html>
-
